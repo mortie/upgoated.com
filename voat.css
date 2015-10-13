@@ -1,0 +1,18 @@
+#header,
+#container .side,
+.alert.eppnotice.alert-dismissible,
+.firsttimevisitorwelcomemessage {
+	display: none !important;
+}
+
+body {
+	background: none;
+}
+
+#container {
+	border: none !important;
+}
+
+#container .content {
+	margin-right: 10px;
+}
