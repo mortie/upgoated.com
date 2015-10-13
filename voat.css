@@ -1,7 +1,7 @@
 #header,
 #container .side,
 .alert.eppnotice.alert-dismissible,
-.firsttimevisitorwelcomemessage {
+#firsttimevisitorwelcomemessage {
 	display: none !important;
 }
 

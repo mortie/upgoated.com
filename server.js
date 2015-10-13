@@ -5,17 +5,22 @@ var fs = require("fs");
 var css = fs.readFileSync("voat.css");
 var js = fs.readFileSync("voat.js");
 
-var files = {
-	"/": fs.readFileSync("index.html"),
-	"/about": fs.readFileSync("about.html"),
-	"/css/layout.css": fs.readFileSync("css/layout.css"),
-	"/imgs/logo.png": fs.readFileSync("imgs/logo.png"),
-	"/imgs/loading.gif": fs.readFileSync("imgs/loading.gif")
+function Files() {
+	return {
+		"/": fs.readFileSync("index.html"),
+		"/about": fs.readFileSync("about.html"),
+		"/css/layout.css": fs.readFileSync("css/layout.css"),
+		"/imgs/logo.png": fs.readFileSync("imgs/logo.png"),
+		"/imgs/loading.gif": fs.readFileSync("imgs/loading.gif")
+	}
 }
+
+var files = Files();
+
 
 var cacheExpires = 1000 * 60 * 5;
 
-function cache(path, time) {
+function Cache(path, time) {
 	var deleteTimer = setTimeout(function() {
 		delete request.cache[path];
 		console.log("deleting caches for "+path);
@@ -41,6 +46,8 @@ function request(path, res) {
 		return res.end(request.cache[path].content);
 	}
 
+	var cachable = isCachable(path);
+
 	console.log(path+" requested, no cache found. Fetching from voat.");
 
 	//There's no valid cache for the page, so we make a request.
@@ -48,10 +55,9 @@ function request(path, res) {
 		host: "voat.co",
 		path: path
 	}, function(r) {
-		var cachable = isCachable(path);
 
 		if (cachable)
-			var c = cache(path, new Date().getTime());
+			var c = Cache(path, new Date().getTime());
 
 		r.on("data", function(data) {
 			res.write(data);
@@ -83,7 +89,11 @@ function request(path, res) {
 }
 request.cache = {};
 
-var port = 8084;
+var port;
+if (process.argv[2] === "dev")
+	port = 8085;
+else
+	port = 8084;
 
 http.createServer(function(req, res) {
 	if (req.url == '/' || req.url.indexOf("/_/") == 0)
@@ -93,3 +103,24 @@ http.createServer(function(req, res) {
 }).listen(port);
 
 console.log("Server started on port "+port+".");
+
+process.stdin.on("data", function(data) {
+	var str = data.toString("utf8");
+	var tokens = str.split(/\s+/);
+
+	switch (tokens[0]) {
+	case "reload":
+		var f;
+		try {
+			f = Files();
+		} catch (err) {
+			return console.trace(err);
+		}
+
+		files = f;
+		console.log("Reload complete.");
+		break;
+	default:
+		console.log("Unknown command: "+tokens[0]);
+	}
+});
